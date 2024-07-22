@@ -22,8 +22,8 @@ def get_historic_price_with_curl(start_date, end_date):
     return None
 
 def main():
-    start_date = '2023-01-30'
-    end_date = '2023-01-30'
+    start_date = '2023-02-28'
+    end_date = '2023-02-28'
 
     data = get_historic_price_with_curl(start_date, end_date)
     if data:

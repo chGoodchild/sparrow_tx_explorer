@@ -5,11 +5,13 @@ from datetime import datetime
 
 def fetch_bitcoin_price_with_curl(date):
     formatted_date = date.strftime('%Y-%m-%d')
+    print("formatted_date, ", formatted_date)
     curl_command = [
         "curl",
         f"https://api.coindesk.com/v1/bpi/historical/close.json?start={formatted_date}&end={formatted_date}"
     ]
     result = subprocess.run(curl_command, capture_output=True, text=True)
+    print("result, ", result)
     if result.returncode == 0:
         try:
             response_data = json.loads(result.stdout)
@@ -35,15 +37,18 @@ def main():
     if df['Date (UTC)'].isnull().any():
         print("Some dates couldn't be parsed and will be skipped.")
     
-    # Drop rows with NaT in 'Date (UTC)' after conversion
     df = df.dropna(subset=['Date (UTC)'])
     
-    print("Populating USD values...")
-    df['Value (USD)'] = df.apply(
-        lambda row: row['Value'] * fetch_bitcoin_price_with_curl(row['Date (UTC)'])
-        if pd.notnull(row['Date (UTC)']) else None, axis=1
-    )
+    # Initialize a new column for USD values
+    df['Value (USD)'] = None
     
+    for index, row in df.iterrows():
+        print(row['Date (UTC)'])
+        price = fetch_bitcoin_price_with_curl(row['Date (UTC)'])
+        if price is not None:
+            df.at[index, 'Value (USD)'] = row['Value'] * price
+            print(f"Fetched price ${price} for date {row['Date (UTC)'].strftime('%Y-%m-%d')} at index {index}")
+
     df.to_csv('../transactions/updated_transactions.csv', index=False)
     print("Updated CSV file has been saved.")
 
