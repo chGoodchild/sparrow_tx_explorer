@@ -31,16 +31,18 @@ def main():
         print("Some dates couldn't be parsed and will be skipped.")
     
     df = df.dropna(subset=['Date (UTC)'])
-    
-    # Initialize a new column for USD values
+
+    # Initialize new columns for USD values and BTC prices
     df['Value (USD)'] = None
+    df['Price at Transaction'] = None
     
     for index, row in df.iterrows():
         transaction_datetime = row['Date (UTC)']
         print(f"Fetching price for {transaction_datetime}")
         price = fetch_bitcoin_price_at_transaction_minute(transaction_datetime)
         if price is not None:
-            df.at[index, 'Value (USD)'] = row['Value'] * price
+            df.at[index, 'Price at Transaction'] = price
+            df.at[index, 'Value (USD)'] = row['Value'] * price / 100000000
             print(f"Fetched price ${price} for date {transaction_datetime.strftime('%Y-%m-%d %H:%M:%S')} at index {index}")
         else:
             print(f"No price data available for {transaction_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
